@@ -1,0 +1,15 @@
+<section class="page-head">
+  <span><em>Tu catálogo</em><h2>Servicios que enamoran</h2><p>Configura precios y duración.</p></span>
+</section>
+<section class="grid">
+  @for (s of items(); track s.id) {
+    <article class="card" [class.off]="!s.activo">
+      <i>{{ s.icono }}</i>
+      <button class="switch" [class.on]="s.activo" (click)="toggle(s.id, s.activo)"><i></i></button>
+      <h3>{{ s.nombre }}</h3>
+      <p>◷ {{ s.duracion }}</p>
+      <b>S/ {{ s.precio }}</b>
+      <small class="adelanto">Adelanto S/ {{ s.adelanto }}</small>
+    </article>
+  }
+</section>

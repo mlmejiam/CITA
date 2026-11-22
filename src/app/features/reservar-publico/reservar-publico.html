@@ -1,0 +1,125 @@
+@if (!profesional) {
+  <div class="wrap">
+    <section class="tarjeta centrado">
+      <h2>No encontramos esta página</h2>
+      <p>Verifica el enlace que te compartió tu profesional.</p>
+    </section>
+  </div>
+} @else {
+  <div class="wrap">
+    <header class="marca">
+      <b>CL</b>
+      <span><strong>{{ profesional.nombre }}</strong><small>Reserva tu cita · Cita Linda</small></span>
+    </header>
+
+    <ol class="pasos">
+      <li [class.on]="paso() === 'servicio'">1. Servicio</li>
+      <li [class.on]="paso() === 'horario'">2. Horario</li>
+      <li [class.on]="paso() === 'datos' || paso() === 'pago'">3. Pago</li>
+      <li [class.on]="paso() === 'confirmacion'">4. Listo</li>
+    </ol>
+
+    @switch (paso()) {
+      @case ('servicio') {
+        <section class="tarjeta">
+          <h2>Elige un servicio</h2>
+          @for (s of profesional.servicios; track s.id) {
+            @if (s.activo) {
+              <button class="servicio" (click)="elegirServicio(s)">
+                <i>{{ s.icono }}</i>
+                <span><strong>{{ s.nombre }}</strong><small>◷ {{ s.duracion }}</small></span>
+                <b>S/ {{ s.precio }}</b>
+              </button>
+            }
+          }
+        </section>
+      }
+
+      @case ('horario') {
+        <section class="tarjeta">
+          <h2>Elige fecha y hora</h2>
+          <p class="sub">{{ servicioSeleccionado()?.nombre }} · S/ {{ servicioSeleccionado()?.precio }}</p>
+
+          <div class="fechas">
+            @for (f of fechasDisponibles(); track f.fecha) {
+              <button [class.on]="fechaSeleccionada() === f.fecha" (click)="elegirFecha(f.fecha)">{{ f.label }}</button>
+            } @empty {
+              <p class="empty">No hay horarios libres en los próximos días. Vuelve a intentarlo más tarde.</p>
+            }
+          </div>
+
+          @if (fechaSeleccionada()) {
+            <div class="horas">
+              @for (h of horariosDisponibles(); track h) {
+                <button (click)="elegirHora(h)">{{ h }}</button>
+              } @empty {
+                <p class="empty">No quedan horarios libres este día. Prueba otra fecha.</p>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @case ('datos') {
+        <section class="tarjeta">
+          <h2>Tus datos</h2>
+          <p class="sub">
+            {{ servicioSeleccionado()?.nombre }} · {{ fechaSeleccionada() }} · {{ horaSeleccionada() }}
+          </p>
+          <label>Nombre completo
+            <input type="text" [value]="clienteNombre()" (input)="clienteNombre.set($any($event.target).value)" placeholder="Tu nombre" />
+          </label>
+          <label>WhatsApp (opcional)
+            <input type="tel" [value]="clienteTelefono()" (input)="clienteTelefono.set($any($event.target).value)" placeholder="987654321" />
+          </label>
+          <button class="primary" [disabled]="!clienteNombre().trim()" (click)="confirmarDatos()">
+            Continuar al pago
+          </button>
+        </section>
+      }
+
+      @case ('pago') {
+        <section class="tarjeta">
+          <h2>Paga tu adelanto por Yape</h2>
+          <p class="countdown">⏱ Tu horario está reservado por {{ restanteSeg() }} s</p>
+
+          <div class="yape">
+            <p>Yape a nombre de</p>
+            <b>{{ profesional.yape.titular }}</b>
+            <p class="numero">{{ profesional.yape.numero }}</p>
+            <p class="monto">Adelanto: S/ {{ servicioSeleccionado()?.adelanto }}</p>
+          </div>
+
+          <label class="upload">
+            Sube la captura de tu pago
+            <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" />
+          </label>
+
+          @if (errorComprobante()) {
+            <p class="error">{{ errorComprobante() }}</p>
+          }
+          @if (comprobanteDataUrl()) {
+            <img class="preview" [src]="comprobanteDataUrl()" alt="Comprobante" />
+          }
+
+          <button class="primary" [disabled]="!comprobanteDataUrl()" (click)="confirmarComprobante()">
+            Ya pagué, enviar comprobante
+          </button>
+        </section>
+      }
+
+      @case ('confirmacion') {
+        <section class="tarjeta centrado">
+          <div class="check">✓</div>
+          <h2>¡Reserva enviada!</h2>
+          <p>
+            {{ profesional.nombre }} va a validar tu comprobante y confirmar tu cita de
+            <b>{{ servicioSeleccionado()?.nombre }}</b> el <b>{{ fechaSeleccionada() }}</b> a las
+            <b>{{ horaSeleccionada() }}</b>.
+          </p>
+          <button class="primary" (click)="agregarACalendario()">📅 Agregar a mi calendario</button>
+        </section>
+      }
+    }
+  </div>
+}

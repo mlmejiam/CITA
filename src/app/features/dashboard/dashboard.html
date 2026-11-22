@@ -1,0 +1,74 @@
+<section class="hero">
+  <div>
+    <span>Tu día está organizado</span>
+    <h2>Buenos días, Andrea ♡</h2>
+    @if (citasHoy().length > 0) {
+      <p>
+        Tienes {{ citasHoy().length }} {{ citasHoy().length === 1 ? 'cita' : 'citas' }} hoy.
+        @if (proximaCita()) {
+          La próxima empieza a las {{ proximaCita()!.horaInicio }}.
+        }
+      </p>
+    } @else {
+      <p>Aún no tienes citas agendadas para hoy.</p>
+    }
+  </div>
+  <div class="cal">
+    <b>{{ hoy.getDate() }}</b>
+    <small>{{ hoy.toLocaleDateString('es-PE', { month: 'short' }).toUpperCase() }}</small>
+  </div>
+</section>
+
+@if (faltaConfigurarProximaSemana()) {
+  <section class="alert">⚠️ Todavía no configuraste tu disponibilidad. Las clientas no podrán reservar contigo.</section>
+}
+
+<section class="stats">
+  <article>
+    <i>♡</i>
+    <span><small>CITAS DE HOY</small><b>{{ citasHoy().length }}</b><p>{{ confirmadasHoy() }} confirmadas</p></span>
+  </article>
+  <article>
+    <i>◷</i>
+    <span><small>PENDIENTES</small><b>{{ pendientesHoy() }}</b><p>Por confirmar</p></span>
+  </article>
+  <article>
+    <i>S/</i>
+    <span><small>INGRESO ESTIMADO</small><b>S/ {{ ingresoEstimado() }}</b><p>Citas de hoy</p></span>
+  </article>
+  <article>
+    <i>Y</i>
+    <span><small>ADELANTOS YAPE</small><b>S/ {{ adelantosValidados() }}</b><p>{{ confirmadasHoy() }} pagos validados</p></span>
+  </article>
+</section>
+
+<div class="cols">
+  <section class="card">
+    <small>AGENDA</small>
+    <h3>Próximas citas</h3>
+    @for (c of citasHoy(); track c.id) {
+      <div class="cita">
+        <b>{{ c.horaInicio }}</b>
+        <i></i>
+        <span><strong>{{ c.clienteNombre }}</strong><small>{{ c.servicioNombre }} · {{ c.duracionMin }} min</small></span>
+        <app-badge-estado [estado]="c.estado" />
+      </div>
+    } @empty {
+      <p class="empty">No hay citas registradas para hoy.</p>
+    }
+  </section>
+
+  <section class="next">
+    <small>SIGUIENTE CITA</small>
+    @if (proximaCita(); as c) {
+      <h2>{{ c.horaInicio }}</h2>
+      <h3>{{ c.clienteNombre }}</h3>
+      <p>{{ c.servicioNombre }}</p>
+      <hr />
+      <p>◷ Duración <b>{{ c.duracionMin }} min</b></p>
+      <p>◉ Adelanto <b>S/ {{ c.adelanto }} pagado</b></p>
+    } @else {
+      <p class="empty-dark">No tienes más citas confirmadas por hoy.</p>
+    }
+  </section>
+</div>

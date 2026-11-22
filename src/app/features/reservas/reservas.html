@@ -1,0 +1,35 @@
+<section class="page-head">
+  <span>
+    <em>Solicitudes recientes</em>
+    <h2>Gestiona tus reservas</h2>
+    <p>Valida el adelanto Yape antes de confirmar.</p>
+  </span>
+  <button class="primary" (click)="copiarEnlace()">
+    {{ enlaceCopiado() ? '✓ Enlace copiado' : 'Compartir enlace' }}
+  </button>
+</section>
+<section class="card list">
+  @for (c of reservas(); track c.id) {
+    <article>
+      <b>{{ c.horaInicio }}<small>{{ c.fecha.split('-')[2] }}/{{ c.fecha.split('-')[1] }}</small></b>
+      <span>
+        <h3>{{ c.clienteNombre }}</h3>
+        <p>{{ c.servicioNombre }} · {{ c.duracionMin }} min</p>
+        @if (c.comprobante) {
+          <a class="comprobante" [href]="c.comprobante.dataUrl" target="_blank">📎 Ver comprobante (S/ {{ c.adelanto }})</a>
+        } @else if (c.estado === 'pendiente_pago') {
+          <small class="unpaid">◷ Comprobante por validar</small>
+        }
+      </span>
+      <app-badge-estado [estado]="c.estado" />
+      @if (c.estado === 'pendiente_pago') {
+        <div class="acciones">
+          <button class="primary" (click)="confirmar(c.id)">Confirmar</button>
+          <button class="outline" (click)="rechazar(c.id)">Rechazar</button>
+        </div>
+      }
+    </article>
+  } @empty {
+    <p class="empty">Todavía no tienes solicitudes de reserva. Comparte tu enlace para empezar a recibirlas.</p>
+  }
+</section>

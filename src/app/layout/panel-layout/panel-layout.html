@@ -1,0 +1,22 @@
+<div class="shell">
+  <aside [class.open]="menu()">
+    <app-sidebar (linkClick)="menu.set(false)" />
+  </aside>
+  <main>
+    <header>
+      <button class="hamb" (click)="menu.set(!menu())">☰</button>
+      <div>
+        <small>{{ fechaHoy }}</small>
+        <h1>{{ titulo() }}</h1>
+      </div>
+      <button class="primary" routerLink="/disponibilidad" (click)="menu.set(false)">＋ Nueva disponibilidad</button>
+    </header>
+    <router-outlet />
+    <footer>
+      © 2026 Cita Linda <span>Hecho con ♡ para profesionales independientes</span>
+    </footer>
+  </main>
+  @if (menu()) {
+    <div class="backdrop" (click)="menu.set(false)"></div>
+  }
+</div>

@@ -1,0 +1,42 @@
+<section class="page-head">
+  <span>
+    <em>Plantilla semanal</em>
+    <h2>¿Cuándo quieres atender?</h2>
+    <p>Se repite todas las semanas. Activa tus días y define los rangos horarios.</p>
+  </span>
+  <button class="primary" (click)="guardar()">
+    {{ guardadoOk() ? '✓ Guardado' : 'Guardar cambios' }}
+  </button>
+</section>
+<section class="grid">
+  @for (d of dias; track d.diaSemana) {
+    <article class="card" [class.off]="!diaPor(d.diaSemana).activo">
+      <div>
+        <h3>{{ d.label }}</h3>
+        <button class="switch" [class.on]="diaPor(d.diaSemana).activo" (click)="toggle(d.diaSemana)"><i></i></button>
+      </div>
+      @if (diaPor(d.diaSemana).activo) {
+        <section>
+          <label>
+            Desde
+            <input
+              type="time"
+              [value]="diaPor(d.diaSemana).rangos[0].desde"
+              (change)="actualizarRango(d.diaSemana, 'desde', $any($event.target).value)"
+            />
+          </label>
+          <label>
+            Hasta
+            <input
+              type="time"
+              [value]="diaPor(d.diaSemana).rangos[0].hasta"
+              (change)="actualizarRango(d.diaSemana, 'hasta', $any($event.target).value)"
+            />
+          </label>
+        </section>
+      } @else {
+        <p>No atenderás este día</p>
+      }
+    </article>
+  }
+</section>

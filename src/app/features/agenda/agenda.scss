@@ -1,0 +1,2 @@
+@use '../feature';.list article{display:flex;gap:20px;align-items:center;padding:20px 0;border-bottom:1px solid #eee}.list article:last-child{border:0}.list article>b{width:65px}.list b small{display:block;color:#a19698;font-size:9px}.list span{flex:1}.list h3{margin:0;font-size:14px}.list p{color:#94898b;font-size:11px}.list em{font-style:normal;font-size:9px;background:#e1f4e8;color:#39815b;padding:6px 9px;border-radius:12px}.list em.pending{background:#fff0c5;color:#9d7800}
+.empty{color:#a19698;font-size:12px;padding:30px 0;text-align:center}

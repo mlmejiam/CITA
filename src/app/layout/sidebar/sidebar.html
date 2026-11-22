@@ -1,0 +1,20 @@
+<div class="brand">
+  <b>CL</b>
+  <span><strong>Cita Linda</strong><small>Agenda sin estrés</small></span>
+</div>
+<nav>
+  @for (i of items; track i[0]) {
+    <button [routerLink]="'/' + i[0]" routerLinkActive="active" (click)="linkClick.emit()">
+      <i>{{ i[1] }}</i>{{ i[2] }}
+    </button>
+  }
+</nav>
+<div class="upgrade">
+  <b>✦ Plan Básico</b>
+  <p>Activa Calendar y recordatorios.</p>
+  <button routerLink="/planes" (click)="linkClick.emit()">Ver Premium</button>
+</div>
+<div class="profile">
+  <span>AM</span>
+  <b>Andrea M.<small>Profesional</small></b>
+</div>

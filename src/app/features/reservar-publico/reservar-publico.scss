@@ -1,0 +1,251 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f8f4ee;
+}
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 28px 18px 60px;
+}
+.marca {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.marca b {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #d85b78;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font: 700 16px 'Playfair Display';
+  box-shadow: 0 8px 18px #d85b7840;
+}
+.marca strong {
+  display: block;
+  font: 700 16px 'Playfair Display';
+}
+.marca small {
+  color: #9d9194;
+  font-size: 10px;
+}
+
+.pasos {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.pasos li {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #c9bfc1;
+  padding-bottom: 8px;
+  border-bottom: 3px solid #eee4e0;
+}
+.pasos li.on {
+  color: #c84b68;
+  border-color: #d85b78;
+}
+
+.tarjeta {
+  background: #fff;
+  border: 1px solid #eee4e0;
+  border-radius: 20px;
+  padding: 24px;
+}
+.tarjeta.centrado {
+  text-align: center;
+  padding: 40px 24px;
+}
+h2 {
+  font: 700 22px 'Playfair Display';
+  margin: 0 0 16px;
+}
+.sub {
+  color: #94898b;
+  font-size: 12px;
+  margin: -8px 0 18px;
+}
+.empty {
+  color: #a19698;
+  font-size: 12px;
+}
+
+.servicio {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #eee4e0;
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.servicio i {
+  font-style: normal;
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  background: #fae8e4;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.servicio span {
+  flex: 1;
+}
+.servicio strong {
+  display: block;
+  font-size: 14px;
+}
+.servicio small {
+  color: #94898b;
+  font-size: 11px;
+}
+.servicio b {
+  color: #c84b68;
+  font: 700 16px 'Playfair Display';
+}
+
+.fechas,
+.horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.fechas button,
+.horas button {
+  border: 1px solid #eee4e0;
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.fechas button.on {
+  background: #d85b78;
+  color: #fff;
+  border-color: #d85b78;
+}
+.horas button:hover {
+  border-color: #d85b78;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  color: #756a6d;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+input[type='text'],
+input[type='tel'] {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid #e5dbd7;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+input[type='file'] {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.primary {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: #d85b78;
+  color: #fff;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.countdown {
+  background: #fff0c5;
+  color: #9d7800;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  margin: -6px 0 18px;
+}
+
+.yape {
+  background: #292124;
+  color: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.yape p {
+  margin: 0;
+  font-size: 11px;
+  color: #cbbfc2;
+}
+.yape b {
+  display: block;
+  font: 700 20px 'Playfair Display';
+  margin: 6px 0;
+}
+.yape .numero {
+  font-size: 16px;
+  color: #f6d56c;
+  font-weight: 700;
+}
+.yape .monto {
+  margin-top: 10px;
+  color: #fff;
+}
+
+.upload {
+  margin-bottom: 10px;
+}
+.error {
+  color: #df5f5f;
+  font-size: 11px;
+  margin: -8px 0 10px;
+}
+.preview {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #eee4e0;
+}
+
+.check {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #e1f4e8;
+  color: #39815b;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 700;
+}

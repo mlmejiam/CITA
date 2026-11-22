@@ -1,0 +1,18 @@
+<section class="page-head">
+  <span>
+    <em>{{ hoy.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }) }}</em>
+    <h2>Tu agenda de hoy</h2>
+    <p>Todo lo necesario para atender sin apuros.</p>
+  </span>
+</section>
+<section class="card list">
+  @for (c of citas(); track c.id) {
+    <article>
+      <b>{{ c.horaInicio }}<small>{{ c.fecha.split('-')[2] }}/{{ c.fecha.split('-')[1] }}</small></b>
+      <span><h3>{{ c.clienteNombre }}</h3><p>{{ c.servicioNombre }} · {{ c.duracionMin }} min</p></span>
+      <app-badge-estado [estado]="c.estado" />
+    </article>
+  } @empty {
+    <p class="empty">No tienes citas registradas para hoy.</p>
+  }
+</section>
