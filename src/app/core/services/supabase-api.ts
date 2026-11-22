@@ -58,6 +58,10 @@ export function mensajeDeError(error: unknown): string {
     if (error.status === 0) return 'No hay conexión. Revisa tu internet e inténtalo de nuevo.';
     const codigo: string | undefined = error.error?.message;
     if (codigo && MENSAJES[codigo]) return MENSAJES[codigo];
+    // Detalle técnico al final para poder diagnosticar (ej. "404 · PGRST202")
+    const detalle = [error.status, error.error?.code].filter(Boolean).join(' · ');
+    console.error('Error de Supabase', error);
+    return `Ocurrió un error. Inténtalo de nuevo en un momento. (${detalle})`;
   }
   return 'Ocurrió un error. Inténtalo de nuevo en un momento.';
 }
