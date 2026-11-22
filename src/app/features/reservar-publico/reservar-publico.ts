@@ -1,6 +1,8 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BookingStore } from '../../core/services/booking-store';
+import { ReservaPublicaService, Ocupado } from '../../core/services/reserva-publica.service';
+import { codigoDeError, mensajeDeError } from '../../core/services/supabase-api';
+import { Profesional } from '../../core/models/profesional.model';
 import { Servicio } from '../../core/models/servicio.model';
 import { Reserva } from '../../core/models/reserva.model';
 import { descargarIcs } from '../../core/utils/ics.util';
@@ -10,6 +12,16 @@ type Paso = 'servicio' | 'horario' | 'datos' | 'pago' | 'confirmacion';
 const TAMANO_MAX_COMPROBANTE = 1.5 * 1024 * 1024;
 const DIAS_A_MOSTRAR = 14;
 
+function fechaISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function sumarDias(dias: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d;
+}
+
 @Component({
   selector: 'app-reservar-publico',
   standalone: true,
@@ -17,12 +29,19 @@ const DIAS_A_MOSTRAR = 14;
   styleUrl: './reservar-publico.scss',
 })
 export class ReservarPublico {
-  private store = inject(BookingStore);
+  private reservas = inject(ReservaPublicaService);
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
 
   slug = this.route.snapshot.paramMap.get('slug') ?? '';
-  profesional = this.store.profesionalPorSlug(this.slug);
+
+  cargando = signal(true);
+  enviando = signal(false);
+  errorCarga = signal<string | undefined>(undefined);
+  errorReserva = signal<string | undefined>(undefined);
+
+  profesional = signal<Profesional | undefined>(undefined);
+  private ocupados = signal<Ocupado[]>([]);
 
   paso = signal<Paso>('servicio');
   servicioSeleccionado = signal<Servicio | undefined>(undefined);
@@ -33,25 +52,22 @@ export class ReservarPublico {
   clienteNombre = signal('');
   clienteTelefono = signal('');
 
+  comprobanteArchivo = signal<File | undefined>(undefined);
   comprobanteDataUrl = signal<string | undefined>(undefined);
-  comprobanteNombre = signal<string | undefined>(undefined);
-  comprobanteTipo = signal<string | undefined>(undefined);
   errorComprobante = signal<string | undefined>(undefined);
 
   restanteSeg = signal(0);
   private timerHandle?: ReturnType<typeof setInterval>;
 
   fechasDisponibles = computed(() => {
-    const profesional = this.profesional;
+    const profesional = this.profesional();
     const servicio = this.servicioSeleccionado();
     if (!profesional || !servicio) return [];
     const resultado: { fecha: string; label: string }[] = [];
     for (let i = 0; i < DIAS_A_MOSTRAR; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const tieneHorarios = this.store.calcularHorariosDisponibles(profesional.id, servicio.id, fecha).length > 0;
-      if (!tieneHorarios) continue;
+      const d = sumarDias(i);
+      const fecha = fechaISO(d);
+      if (this.reservas.horariosLibres(profesional, servicio, fecha, this.ocupados()).length === 0) continue;
       const label = d.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short' });
       resultado.push({ fecha, label });
     }
@@ -59,20 +75,51 @@ export class ReservarPublico {
   });
 
   horariosDisponibles = computed(() => {
+    const profesional = this.profesional();
     const servicio = this.servicioSeleccionado();
     const fecha = this.fechaSeleccionada();
-    if (!this.profesional || !servicio || !fecha) return [];
-    return this.store.calcularHorariosDisponibles(this.profesional.id, servicio.id, fecha);
+    if (!profesional || !servicio || !fecha) return [];
+    return this.reservas.horariosLibres(profesional, servicio, fecha, this.ocupados());
   });
 
   constructor() {
     this.destroyRef.onDestroy(() => this.limpiarCountdown());
+    this.cargar();
+  }
+
+  private async cargar() {
+    this.cargando.set(true);
+    this.errorCarga.set(undefined);
+    try {
+      const profesional = await this.reservas.cargarProfesional(this.slug);
+      this.profesional.set(profesional);
+      if (profesional) await this.recargarOcupados();
+    } catch (e) {
+      this.errorCarga.set(mensajeDeError(e));
+    } finally {
+      this.cargando.set(false);
+    }
+  }
+
+  private async recargarOcupados() {
+    const profesional = this.profesional();
+    if (!profesional) return;
+    const ocupados = await this.reservas.cargarOcupados(
+      profesional.id,
+      fechaISO(new Date()),
+      fechaISO(sumarDias(DIAS_A_MOSTRAR - 1)),
+    );
+    this.ocupados.set(ocupados);
+  }
+
+  reintentar() {
+    this.cargar();
   }
 
   elegirServicio(servicio: Servicio) {
+    this.errorReserva.set(undefined);
     this.servicioSeleccionado.set(servicio);
-    const primeraFecha = this.fechasDisponibles()[0]?.fecha;
-    this.fechaSeleccionada.set(primeraFecha);
+    this.fechaSeleccionada.set(this.fechasDisponibles()[0]?.fecha);
     this.horaSeleccionada.set(undefined);
     this.paso.set('horario');
   }
@@ -83,30 +130,32 @@ export class ReservarPublico {
   }
 
   elegirHora(hora: string) {
+    this.errorReserva.set(undefined);
     this.horaSeleccionada.set(hora);
     this.paso.set('datos');
   }
 
-  confirmarDatos() {
-    const profesional = this.profesional;
+  async confirmarDatos() {
     const servicio = this.servicioSeleccionado();
     const fecha = this.fechaSeleccionada();
     const hora = this.horaSeleccionada();
-    if (!profesional || !servicio || !fecha || !hora || !this.clienteNombre().trim()) return;
+    if (!servicio || !fecha || !hora || !this.clienteNombre().trim() || this.enviando()) return;
 
-    const reserva = this.store.bloquearSlot(profesional.id, servicio.id, fecha, hora, {
-      nombre: this.clienteNombre().trim(),
-      telefono: this.clienteTelefono().trim() || undefined,
-    });
-
-    if (!reserva) {
-      this.paso.set('horario');
-      return;
+    this.enviando.set(true);
+    this.errorReserva.set(undefined);
+    try {
+      const reserva = await this.reservas.bloquearSlot(servicio.id, fecha, hora, {
+        nombre: this.clienteNombre().trim(),
+        telefono: this.clienteTelefono().trim() || undefined,
+      });
+      this.reservaActual.set(reserva);
+      this.iniciarCountdown(reserva);
+      this.paso.set('pago');
+    } catch (e) {
+      await this.volverAHorarios(mensajeDeError(e));
+    } finally {
+      this.enviando.set(false);
     }
-
-    this.reservaActual.set(reserva);
-    this.iniciarCountdown(reserva);
-    this.paso.set('pago');
   }
 
   onArchivoSeleccionado(event: Event) {
@@ -120,43 +169,57 @@ export class ReservarPublico {
       return;
     }
 
+    this.comprobanteArchivo.set(file);
     const reader = new FileReader();
-    reader.onload = () => {
-      this.comprobanteDataUrl.set(reader.result as string);
-      this.comprobanteNombre.set(file.name);
-      this.comprobanteTipo.set(file.type);
-    };
+    reader.onload = () => this.comprobanteDataUrl.set(reader.result as string);
     reader.readAsDataURL(file);
   }
 
-  confirmarComprobante() {
+  async confirmarComprobante() {
     const reserva = this.reservaActual();
-    const dataUrl = this.comprobanteDataUrl();
-    const servicio = this.servicioSeleccionado();
-    if (!reserva || !dataUrl || !servicio) return;
+    const archivo = this.comprobanteArchivo();
+    if (!reserva || !archivo || this.enviando()) return;
 
-    const exito = this.store.subirComprobante(reserva.id, {
-      dataUrl,
-      nombreArchivo: this.comprobanteNombre() ?? 'comprobante',
-      tipo: this.comprobanteTipo() ?? 'image/*',
-      monto: servicio.adelanto,
-    });
-
-    if (!exito) {
+    this.enviando.set(true);
+    this.errorComprobante.set(undefined);
+    try {
+      const actualizada = await this.reservas.enviarComprobante(reserva, archivo);
+      this.reservaActual.set(actualizada);
       this.limpiarCountdown();
-      this.reservaActual.set(undefined);
-      this.paso.set('horario');
-      return;
+      this.paso.set('confirmacion');
+    } catch (e) {
+      if (codigoDeError(e) === 'RESERVA_NO_VALIDA') {
+        await this.volverAHorarios(mensajeDeError(e));
+      } else {
+        // Error de red o del archivo: la clienta puede reintentar mientras dure el bloqueo.
+        this.errorComprobante.set(mensajeDeError(e));
+      }
+    } finally {
+      this.enviando.set(false);
     }
-
-    this.limpiarCountdown();
-    this.paso.set('confirmacion');
   }
 
   agregarACalendario() {
     const reserva = this.reservaActual();
-    if (!reserva || !this.profesional) return;
-    descargarIcs(reserva, this.profesional);
+    const profesional = this.profesional();
+    if (!reserva || !profesional) return;
+    descargarIcs(reserva, profesional);
+  }
+
+  /** Vuelve al paso de horarios con un mensaje y lo ocupado actualizado. */
+  private async volverAHorarios(mensaje: string) {
+    this.limpiarCountdown();
+    this.reservaActual.set(undefined);
+    this.horaSeleccionada.set(undefined);
+    this.comprobanteArchivo.set(undefined);
+    this.comprobanteDataUrl.set(undefined);
+    this.errorReserva.set(mensaje);
+    this.paso.set('horario');
+    try {
+      await this.recargarOcupados();
+    } catch {
+      // Si falla la recarga se mantienen los datos anteriores.
+    }
   }
 
   private iniciarCountdown(reserva: Reserva) {
@@ -165,10 +228,8 @@ export class ReservarPublico {
       const restante = Math.max(0, Math.floor(((reserva.slotExpiraEn ?? 0) - Date.now()) / 1000));
       this.restanteSeg.set(restante);
       if (restante <= 0) {
-        this.limpiarCountdown();
-        this.store.liberarSlotExpirado(reserva.id);
-        this.reservaActual.set(undefined);
-        this.paso.set('horario');
+        // La base marca el bloqueo como 'expirada' sola; aquí solo actualizamos la pantalla.
+        this.volverAHorarios('Se acabó el tiempo para pagar y el horario se liberó. Vuelve a elegir uno.');
       }
     };
     tick();
@@ -177,5 +238,6 @@ export class ReservarPublico {
 
   private limpiarCountdown() {
     if (this.timerHandle) clearInterval(this.timerHandle);
+    this.timerHandle = undefined;
   }
 }
