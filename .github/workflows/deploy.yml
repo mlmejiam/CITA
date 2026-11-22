@@ -1,0 +1,53 @@
+# Compila la app y la publica en GitHub Pages cada vez que hay cambios en main.
+# URL: https://mlmejiam.github.io/CITA/
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps
+
+      - name: Compilar
+        # base-href = nombre del repo, porque la app vive en /CITA/
+        run: npx ng build --configuration production --base-href /CITA/
+
+      - name: Soporte para rutas de Angular
+        # GitHub Pages no conoce /reservar/andrea; con 404.html carga la app y Angular resuelve la ruta
+        run: cp dist/Cita/browser/index.html dist/Cita/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/Cita/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

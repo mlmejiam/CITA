@@ -1,4 +1,18 @@
-@if (!profesional) {
+@if (cargando()) {
+  <div class="wrap">
+    <section class="tarjeta centrado">
+      <p>Cargando…</p>
+    </section>
+  </div>
+} @else if (errorCarga()) {
+  <div class="wrap">
+    <section class="tarjeta centrado">
+      <h2>No pudimos cargar la página</h2>
+      <p class="error">{{ errorCarga() }}</p>
+      <button class="primary" (click)="reintentar()">Reintentar</button>
+    </section>
+  </div>
+} @else if (!profesional()) {
   <div class="wrap">
     <section class="tarjeta centrado">
       <h2>No encontramos esta página</h2>
@@ -6,10 +20,11 @@
     </section>
   </div>
 } @else {
+  @let pro = profesional()!;
   <div class="wrap">
     <header class="marca">
       <b>CL</b>
-      <span><strong>{{ profesional.nombre }}</strong><small>Reserva tu cita · Cita Linda</small></span>
+      <span><strong>{{ pro.nombre }}</strong><small>Reserva tu cita · Cita Linda</small></span>
     </header>
 
     <ol class="pasos">
@@ -23,7 +38,7 @@
       @case ('servicio') {
         <section class="tarjeta">
           <h2>Elige un servicio</h2>
-          @for (s of profesional.servicios; track s.id) {
+          @for (s of pro.servicios; track s.id) {
             @if (s.activo) {
               <button class="servicio" (click)="elegirServicio(s)">
                 <i>{{ s.icono }}</i>
@@ -39,6 +54,10 @@
         <section class="tarjeta">
           <h2>Elige fecha y hora</h2>
           <p class="sub">{{ servicioSeleccionado()?.nombre }} · S/ {{ servicioSeleccionado()?.precio }}</p>
+
+          @if (errorReserva()) {
+            <p class="error">{{ errorReserva() }}</p>
+          }
 
           <div class="fechas">
             @for (f of fechasDisponibles(); track f.fecha) {
@@ -72,8 +91,8 @@
           <label>WhatsApp (opcional)
             <input type="tel" [value]="clienteTelefono()" (input)="clienteTelefono.set($any($event.target).value)" placeholder="987654321" />
           </label>
-          <button class="primary" [disabled]="!clienteNombre().trim()" (click)="confirmarDatos()">
-            Continuar al pago
+          <button class="primary" [disabled]="!clienteNombre().trim() || enviando()" (click)="confirmarDatos()">
+            {{ enviando() ? 'Reservando…' : 'Continuar al pago' }}
           </button>
         </section>
       }
@@ -85,8 +104,8 @@
 
           <div class="yape">
             <p>Yape a nombre de</p>
-            <b>{{ profesional.yape.titular }}</b>
-            <p class="numero">{{ profesional.yape.numero }}</p>
+            <b>{{ pro.yape.titular }}</b>
+            <p class="numero">{{ pro.yape.numero }}</p>
             <p class="monto">Adelanto: S/ {{ servicioSeleccionado()?.adelanto }}</p>
           </div>
 
@@ -102,8 +121,8 @@
             <img class="preview" [src]="comprobanteDataUrl()" alt="Comprobante" />
           }
 
-          <button class="primary" [disabled]="!comprobanteDataUrl()" (click)="confirmarComprobante()">
-            Ya pagué, enviar comprobante
+          <button class="primary" [disabled]="!comprobanteArchivo() || enviando()" (click)="confirmarComprobante()">
+            {{ enviando() ? 'Enviando…' : 'Ya pagué, enviar comprobante' }}
           </button>
         </section>
       }
@@ -113,7 +132,7 @@
           <div class="check">✓</div>
           <h2>¡Reserva enviada!</h2>
           <p>
-            {{ profesional.nombre }} va a validar tu comprobante y confirmar tu cita de
+            {{ pro.nombre }} va a validar tu comprobante y confirmar tu cita de
             <b>{{ servicioSeleccionado()?.nombre }}</b> el <b>{{ fechaSeleccionada() }}</b> a las
             <b>{{ horaSeleccionada() }}</b>.
           </p>
