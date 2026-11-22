@@ -13,3 +13,12 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 grant execute on function horarios_ocupados_rango(uuid, date, date) to anon, authenticated;
+
+-- Permisos explícitos sobre las tablas para la API.
+-- (Las políticas RLS siguen decidiendo qué filas ve cada quien.)
+grant usage on schema public to anon, authenticated;
+grant select on planes, profesionales, servicios, disponibilidad, rangos_horario to anon, authenticated;
+grant insert, update on profesionales to authenticated;
+grant select, insert, update, delete on servicios, disponibilidad, rangos_horario to authenticated;
+grant select, update on reservas to authenticated;
+grant select on comprobantes, suscripciones to authenticated;
