@@ -9,9 +9,20 @@
         <small>{{ fechaHoy }}</small>
         <h1>{{ titulo() }}</h1>
       </div>
-      <button class="primary" routerLink="/disponibilidad" (click)="menu.set(false)">＋ Nueva disponibilidad</button>
+      <button class="refrescar" (click)="actualizar()" [disabled]="store.cargando()" title="Buscar reservas nuevas">
+        {{ store.cargando() ? '…' : '↻' }}
+      </button>
     </header>
-    <router-outlet />
+    @if (store.listo()) {
+      <router-outlet />
+    } @else if (store.error()) {
+      <section class="estado">
+        <p>{{ store.error() }}</p>
+        <button class="primary" (click)="actualizar()">Reintentar</button>
+      </section>
+    } @else {
+      <section class="estado"><p>Cargando tu agenda…</p></section>
+    }
     <footer>
       © 2026 Cita Linda <span>Hecho con ♡ para profesionales independientes</span>
     </footer>

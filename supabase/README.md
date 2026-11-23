@@ -10,6 +10,11 @@
 3. En **Table Editor** deberías ver: `planes`, `profesionales`, `suscripciones`, `servicios`,
    `disponibilidad`, `rangos_horario`, `reservas`, `comprobantes`.
 
+## 2b. Scripts posteriores (en orden, cada uno una sola vez)
+1. `migrations/20261122010000_horarios_ocupados_rango.sql`
+2. `migrations/20261123000000_panel_profesional.sql`
+3. `seed_demo.sql` (después de crear tu usuario en Authentication → Users)
+
 ## 3. Datos que necesitará Angular
 En **Project Settings → API** copia:
 - **Project URL** (`https://xxxx.supabase.co`)

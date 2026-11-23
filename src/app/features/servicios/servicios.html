@@ -1,6 +1,9 @@
 <section class="page-head">
   <span><em>Tu catálogo</em><h2>Servicios que enamoran</h2><p>Configura precios y duración.</p></span>
 </section>
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
 <section class="grid">
   @for (s of items(); track s.id) {
     <article class="card" [class.off]="!s.activo">

@@ -8,6 +8,9 @@
     {{ enlaceCopiado() ? '✓ Enlace copiado' : 'Compartir enlace' }}
   </button>
 </section>
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
 <section class="card list">
   @for (c of reservas(); track c.id) {
     <article>
@@ -15,8 +18,11 @@
       <span>
         <h3>{{ c.clienteNombre }}</h3>
         <p>{{ c.servicioNombre }} · {{ c.duracionMin }} min</p>
-        @if (c.comprobante) {
-          <a class="comprobante" [href]="c.comprobante.dataUrl" target="_blank">📎 Ver comprobante (S/ {{ c.adelanto }})</a>
+        @if (c.clienteTelefono) {
+          <a class="comprobante" [href]="enlaceWhatsapp(c.clienteTelefono)" target="_blank" rel="noopener">💬 WhatsApp {{ c.clienteTelefono }}</a>
+        }
+        @if (c.comprobante && enlaces()[c.comprobante.archivoPath]; as url) {
+          <a class="comprobante" [href]="url" target="_blank" rel="noopener">📎 Ver comprobante (S/ {{ c.adelanto }})</a>
         } @else if (c.estado === 'pendiente_pago') {
           <small class="unpaid">◷ Comprobante por validar</small>
         }
@@ -24,8 +30,10 @@
       <app-badge-estado [estado]="c.estado" />
       @if (c.estado === 'pendiente_pago') {
         <div class="acciones">
-          <button class="primary" (click)="confirmar(c.id)">Confirmar</button>
-          <button class="outline" (click)="rechazar(c.id)">Rechazar</button>
+          <button class="primary" [disabled]="procesando() === c.id" (click)="confirmar(c.id)">
+            {{ procesando() === c.id ? '…' : 'Confirmar' }}
+          </button>
+          <button class="outline" [disabled]="procesando() === c.id" (click)="rechazar(c.id)">Rechazar</button>
         </div>
       }
     </article>

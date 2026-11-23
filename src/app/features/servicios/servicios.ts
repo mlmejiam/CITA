@@ -1,7 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { BookingStore } from '../../core/services/booking-store';
-
-const PROFESIONAL_ID = 'prof-andrea';
+import { mensajeDeError } from '../../core/services/supabase-api';
 
 @Component({
   selector: 'app-servicios',
@@ -12,9 +11,15 @@ const PROFESIONAL_ID = 'prof-andrea';
 export class Servicios {
   private store = inject(BookingStore);
 
-  items = computed(() => this.store.profesionales().find((p) => p.id === PROFESIONAL_ID)?.servicios ?? []);
+  items = computed(() => this.store.profesional()?.servicios ?? []);
+  error = signal<string | undefined>(undefined);
 
-  toggle(servicioId: string, activo: boolean) {
-    this.store.actualizarServicio(PROFESIONAL_ID, servicioId, { activo: !activo });
+  async toggle(servicioId: string, activo: boolean) {
+    this.error.set(undefined);
+    try {
+      await this.store.actualizarServicio(servicioId, { activo: !activo });
+    } catch (e) {
+      this.error.set(mensajeDeError(e));
+    }
   }
 }

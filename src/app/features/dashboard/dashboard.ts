@@ -29,7 +29,7 @@ export class Dashboard {
   confirmadasHoy = computed(() => this.validadasHoy().length);
 
   faltaConfigurarProximaSemana = computed(() => {
-    const disponibilidad = this.store.profesionalPorSlug('andrea')?.disponibilidad ?? [];
+    const disponibilidad = this.store.profesional()?.disponibilidad ?? [];
     return disponibilidad.every((d) => !d.activo);
   });
 }
