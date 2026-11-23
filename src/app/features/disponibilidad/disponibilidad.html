@@ -4,10 +4,13 @@
     <h2>¿Cuándo quieres atender?</h2>
     <p>Se repite todas las semanas. Activa tus días y define los rangos horarios.</p>
   </span>
-  <button class="primary" (click)="guardar()">
-    {{ guardadoOk() ? '✓ Guardado' : 'Guardar cambios' }}
+  <button class="primary" [disabled]="guardando()" (click)="guardar()">
+    {{ guardando() ? 'Guardando…' : guardadoOk() ? '✓ Guardado' : 'Guardar cambios' }}
   </button>
 </section>
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
 <section class="grid">
   @for (d of dias; track d.diaSemana) {
     <article class="card" [class.off]="!diaPor(d.diaSemana).activo">

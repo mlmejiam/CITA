@@ -1,8 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { BookingStore } from '../../core/services/booking-store';
 import { DisponibilidadSemana } from '../../core/models/disponibilidad.model';
-
-const PROFESIONAL_ID = 'prof-andrea';
+import { mensajeDeError } from '../../core/services/supabase-api';
 
 const DIAS_ORDEN: { diaSemana: number; label: string }[] = [
   { diaSemana: 1, label: 'Lunes' },
@@ -26,10 +25,12 @@ export class Disponibilidad {
   dias = DIAS_ORDEN;
 
   disponibilidad = signal<DisponibilidadSemana>(
-    structuredClone(this.store.profesionales().find((p) => p.id === PROFESIONAL_ID)?.disponibilidad ?? []),
+    structuredClone(this.store.profesional()?.disponibilidad ?? []),
   );
 
   guardadoOk = signal(false);
+  guardando = signal(false);
+  error = signal<string | undefined>(undefined);
 
   diaPor(diaSemana: number) {
     return this.disponibilidad().find((d) => d.diaSemana === diaSemana)!;
@@ -59,9 +60,18 @@ export class Disponibilidad {
     );
   }
 
-  guardar() {
-    this.store.actualizarDisponibilidad(PROFESIONAL_ID, this.disponibilidad());
-    this.guardadoOk.set(true);
-    setTimeout(() => this.guardadoOk.set(false), 2000);
+  async guardar() {
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    this.error.set(undefined);
+    try {
+      await this.store.actualizarDisponibilidad(this.disponibilidad());
+      this.guardadoOk.set(true);
+      setTimeout(() => this.guardadoOk.set(false), 2000);
+    } catch (e) {
+      this.error.set(mensajeDeError(e));
+    } finally {
+      this.guardando.set(false);
+    }
   }
 }

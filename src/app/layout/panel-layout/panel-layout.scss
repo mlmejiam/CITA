@@ -90,3 +90,22 @@ footer {
     z-index: 5;
   }
 }
+
+.refrescar {
+  border: 1px solid #e4dad6;
+  background: #fff;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  color: #c84b68;
+  cursor: pointer;
+}
+.estado {
+  background: #fff;
+  border: 1px solid #eee4e0;
+  border-radius: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  color: #756a6d;
+}

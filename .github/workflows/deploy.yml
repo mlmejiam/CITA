@@ -5,6 +5,7 @@ name: Publicar en GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request: # en un PR solo compila (para detectar errores antes del merge), no publica
   workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
 
 permissions:
@@ -43,6 +44,7 @@ jobs:
           path: dist/Cita/browser
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

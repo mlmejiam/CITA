@@ -1,0 +1,37 @@
+<div class="wrap">
+  <header class="marca">
+    <b>CL</b>
+    <span><strong>Cita Linda</strong><small>Panel de la profesional</small></span>
+  </header>
+
+  <form class="tarjeta" (submit)="entrar($event)">
+    <h2>Inicia sesión</h2>
+
+    <label>Correo
+      <input
+        type="email"
+        autocomplete="email"
+        [value]="email()"
+        (input)="email.set($any($event.target).value)"
+        placeholder="tucorreo@ejemplo.com"
+      />
+    </label>
+
+    <label>Contraseña
+      <input
+        type="password"
+        autocomplete="current-password"
+        [value]="password()"
+        (input)="password.set($any($event.target).value)"
+      />
+    </label>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button class="primary" type="submit" [disabled]="!email().trim() || !password() || enviando()">
+      {{ enviando() ? 'Entrando…' : 'Entrar' }}
+    </button>
+  </form>
+</div>

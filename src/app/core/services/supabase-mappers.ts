@@ -4,6 +4,7 @@ import { Profesional } from '../models/profesional.model';
 import { Servicio } from '../models/servicio.model';
 import { DisponibilidadSemana } from '../models/disponibilidad.model';
 import { EstadoReserva, Reserva } from '../models/reserva.model';
+import { Comprobante } from '../models/comprobante.model';
 import { formatMinutos } from '../utils/duracion.util';
 
 export interface ServicioRow {
@@ -43,6 +44,15 @@ export interface ProfesionalRow {
   disponibilidad: DisponibilidadRow[];
 }
 
+export interface ComprobanteRow {
+  id: string;
+  archivo_path: string;
+  nombre_archivo: string | null;
+  tipo: string | null;
+  monto: number;
+  subido_en: string;
+}
+
 export interface ReservaRow {
   id: string;
   profesional_id: string;
@@ -61,6 +71,8 @@ export interface ReservaRow {
   motivo: string | null;
   creado_en: string;
   actualizado_en: string;
+  /** Solo viene si se pide con select=*,comprobantes(*). Puede llegar como objeto o lista. */
+  comprobantes?: ComprobanteRow | ComprobanteRow[] | null;
 }
 
 export interface OcupadoRow {
@@ -119,6 +131,19 @@ export function aProfesional(row: ProfesionalRow): Profesional {
   };
 }
 
+function aComprobante(row: ReservaRow['comprobantes']): Comprobante | undefined {
+  const c = Array.isArray(row) ? row[0] : row;
+  if (!c) return undefined;
+  return {
+    id: c.id,
+    archivoPath: c.archivo_path,
+    nombreArchivo: c.nombre_archivo ?? 'comprobante',
+    tipo: c.tipo ?? '',
+    monto: Number(c.monto),
+    subidoEn: Date.parse(c.subido_en),
+  };
+}
+
 export function aReserva(row: ReservaRow): Reserva {
   return {
     id: row.id,
@@ -136,6 +161,7 @@ export function aReserva(row: ReservaRow): Reserva {
     estado: row.estado,
     slotExpiraEn: row.slot_expira_en ? Date.parse(row.slot_expira_en) : undefined,
     motivo: row.motivo ?? undefined,
+    comprobante: aComprobante(row.comprobantes),
     creadoEn: Date.parse(row.creado_en),
     actualizadoEn: Date.parse(row.actualizado_en),
   };
